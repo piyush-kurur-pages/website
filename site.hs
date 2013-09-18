@@ -5,6 +5,8 @@ import Hakyll
 import Site.Config -- Edit this file to change the configuration.
 import Site.Compilers
 
+import qualified Site.Blog as Blog  -- Rules to hand blog
+
 ----------------   Rules   --------------------------------------------
 
 rules :: Rules () -- ^ the actual rules for conversion
@@ -16,7 +18,7 @@ rules = do
     compile compressCssCompiler
 
   -- Compile the templates.
-  match "templates/*" $ compile templateCompiler
+  match "templates/**" $ compile templateCompiler
 
   -- Match urls database
   match "misc/urls.db" $ compile getResourceBody
@@ -24,9 +26,15 @@ rules = do
   -- Compile navigation bar
   match "misc/navigation.md" $ compilePipeline pandoc
 
-  match "**index.md" $ do
+  match "index.md" $ do
+    route $ setExtension "html"
+    compilePipeline mainPage
+
+  match "**/index.md" $ do
     route $ setExtension "html"
     compilePipeline stdPage
+
+  Blog.rules
 
 ----------------   Main and sundry   ------------------------------------
 

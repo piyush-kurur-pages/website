@@ -7,6 +7,7 @@ $column-width: 4em
 $gutter-width: 1em
 $grid-padding: $gutter-width
 
+
 .page
   +container
   .header
@@ -25,6 +26,8 @@ $grid-padding: $gutter-width
         +span-columns(2,6)
       .navigation-work
         +span-columns(2,6)
+      .navigation-blog
+        +span-columns(2 omega,6)
   .content
     padding-top: 1em
     +span-columns(12)
@@ -32,3 +35,13 @@ $grid-padding: $gutter-width
       +span-columns(6, 12)
     .recent-posts
       +span-columns(6 omega, 12)
+
+    .post-date
+      font-size: 80%
+      +span-columns(3,12)
+    .post-tags
+      font-size: 80%
+      +span-columns(3 omega, 12)
+
+    .post
+      +span-columns(12, 12)
