@@ -58,5 +58,12 @@ powerful types can thus be used as a proof assistant to achieve
 completely automating mathematical proof checking. This viewpoint
 means that a mathematician is not that much concerned about efficiency.
 
+# Contents
+
+1. [Lambda Calculus][lambda-calculus]
+
+
+[lambda-calculus]: </posts/2013-11-04-Lambda-calculus.html>
+
 [type theory]: </posts/tags/Type theory.html> "Posts on Type theory"
 [hott]: <http://homotopytypetheory.org> "Homotopic Type Theory"
