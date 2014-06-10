@@ -1,16 +1,26 @@
 $color: #333333
 $background: hsl(240,80%,98)
 $title-color: #005599
-$border: $title-color
+$border: lighten($color, 70%)
 
 $code-background: hsl(60,100%,90)
 
 $link-color: $title-color
 $link-visited-color: darken($link-color,10%)
 
+$navigation-background: darken($background,2%)
 $navigation-color: lighten($color,20%)
-$navigation-item-color: lighten($navigation-color,30%)
+$navigation-item-color: lighten($color , 40%)
 $navigation-hover-color: $title-color
+
+$powered-by-background: darken($background,1%)
+$break-small: 320px
+
+// $navigation-background: $title-color
+// $navigation-color: white
+// $navigation-item-color: darken($background,10%)
+// $navigation-hover-color: $background
+
 
 
 
@@ -22,5 +32,6 @@ $paragraph-indent: 1.5em
 
 
 $code-font: "andale mono", "lucida console", monospace !default
-$font: "Warnock Pro", "Goudy Old Style","Palatino","Book Antiqua",Georgia, serif
+$font: "Warnock Pro", "Goudy Old Style","Palatino", "Book Antiqua",Georgia, serif
+// $font: Avant Garde
 //$font: "Arial Black", Gadget, sans-serif

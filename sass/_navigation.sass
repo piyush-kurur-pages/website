@@ -1,7 +1,35 @@
-.navigation ul
+.navigation
+  background: $navigation-background
   color: $navigation-color
-  margin-left: 0px
-  @include adjust-font-size-to(0.8 * $base-font-size)
-  +no-bullets
+  position: fixed
+  left: 0
+  right: 0
+  top: 0
+  padding:
+    left: 1em
+    bottom: 1em
+  border-bottom:
+    style: solid
+    color: $border
+    width: 1px
+
+
+  ul
+    +no-bullets
+    +horizontal-list
+
+    li
+      padding-left: 0.5em
+      .nav-text
+        display: none
+
+    li:first-child
+      padding-left: 0
+
+    li:nth-last-child(2)
+      float: right
+    li:last-child
+      float: right
+
   a
     +link-colors($navigation-item-color, $hover: $navigation-hover-color)

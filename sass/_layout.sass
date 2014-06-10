@@ -4,6 +4,7 @@
 // Layout configuration
 
 $total-columns: 12
+$length: 90%
 $column-width: 4em
 $gutter-width: 1em
 $grid-padding: $gutter-width
@@ -13,23 +14,15 @@ $grid-padding: $gutter-width
 .page
   +container
   .header
-    +span-columns(12)
-    .title
-      +span-columns(4,12)
-    .navigation
-      +span-columns(6 omega, 12)
-      .navigation-meta
-        +span-columns(2,6)
-      .navigation-work
-        +span-columns(2,6)
-      .navigation-blog
-        +span-columns(2 omega,6)
+    +span-columns($total-columns)
   .content
-    +span-columns(12)
-    .about
-      +span-columns(6, 12)
-    .recent-posts
-      +span-columns(6 omega, 12)
-
+    +span-columns($total-columns)
     .post
-      +span-columns(12, 12)
+      +span-columns($total-columns)
+
+
+.blog-nav
+  ul
+    +horizontal-list
+    +no-bullet
+    float: right
