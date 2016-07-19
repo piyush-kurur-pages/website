@@ -42,12 +42,12 @@ module Site.Publication
 import Control.Applicative
 import Control.Monad
 import Data.Monoid
-import Data.String
 import Hakyll
-import System.Directory
 import System.FilePath
+import System.Cmd
 
 import Site.Compilers
+import Site.Config
 import Site.RemoteFile
 
 
@@ -67,9 +67,20 @@ pubItemT = "templates/publication/item.md"
 
 rules :: Rules ()
 rules = do
-  --
-  -- Compile each publication
-  --
+  -- Build all pdf files.
+  getMatches pubPat >>= mapM_ runMake
+  
+  -- Create bib version of publication
+  match pubPat $ version "bib" $ do
+    route   $ setExtension "bib"
+    compile $ copyPublication "bib"
+
+  -- Create pdf version of publications
+  match pubPat $ version "pdf" $ do
+    route   $ setExtension "pdf"
+    compile $ copyPublication "pdf"
+
+  -- Create plain entry.
   match pubPat
     $ compilePipeline
     $ loadAndApplyTemplate pubItemT pubContext
@@ -87,16 +98,6 @@ rules = do
     route $ setExtension "html"
     compilePipeline researchPage
 
-  --
-  -- Local download sources
-  --
-
-  do downloadItems <- allDownloads
-     forM_ downloadItems $ \ (ident, fp) -> do
-       create [ident] $ do
-         route idRoute
-         compile $ copyRemoteFileCompiler fp
-
 ------------------- Contexts and Compilers -----------------------------
 
 -- | The field that consists of all categories
@@ -108,10 +109,10 @@ researchPage = prePandoc
              >=> postPandoc siteContext
 
 catPage :: Pattern -> Compiler (Item String)
-catPage = loadAll
+catPage = loadCategory
         >=> recentFirst
         >=> makeItem . unlines . map itemBody
-
+  where loadCategory p = loadAll (p .&&. hasNoVersion)
 
 -- | Context for a category of publication.
 catContext :: Context String
@@ -128,59 +129,67 @@ pubContext = defaultContext
              <> field "downloads" (downloads . itemIdentifier)
              <> dateField "year" "%Y"
 
-sources :: ( MonadMetadata m
-           , Functor m
-           )
-        => Identifier -> m [String]
-sources ident = maybe [] words <$> getMetadataField ident "sources"
-
+-- Create the download list.
 downloads :: Identifier -> Compiler String
-downloads ident = do
-  srcs <- sources ident
-  case srcs of
-    [] -> return []
-    _  -> do key <- getMetadataField' ident "key"
-             return $ concatMap (makeDownload key) srcs
+downloads ident = return $ concat [ li $ markdownLink url "pdf"
+                                  , li $ markdownLink url "bib"
+                                  ]
+  where url = "/" ++ dropExtension (toFilePath ident)
 
 
-localDownloads :: FilePath -- ^ Home directory
-               -> Identifier
-               -> Rules [(Identifier, FilePath)]
-localDownloads homeDir ident = do
-  srcs <- sources ident
-  case srcs of
-    [] -> return []
-    _  -> do key  <- getMetadataField' ident "key"
-             path <- getMetadataField' ident "path"
-             let identifierOf src = fromString $ "research/publication/"
-                                    </> key <.> takeExtension src
-                 pathOf      src = attachHome homeDir (splitPath path) </> src
-               in return $ [ (identifierOf src, pathOf src) | src <- srcs]
+-- | A publication has two version pdf or bib. The metadata fileshould have a sing
+copyPublication :: String   -- version (pdf/bib)
+                -> Compiler (Item RemoteFile)
+copyPublication ver  = do
+  ident <- getUnderlying
+  name  <- getMetadataField' ident ver
+  dir   <- pubSourceDir
+  copyRemoteFileCompiler $ dir </> name <.> ver
 
-attachHome :: FilePath -> [FilePath] -> FilePath
-attachHome homeDir ( "~/" : ps) = joinPath $ homeDir : ps
-attachHome _       paths        = joinPath $ paths
 
-allDownloads :: Rules [(Identifier, FilePath)]
-allDownloads =  do homeDir <- preprocess $ getHomeDirectory
-                   getMatches pubPat >>= concatMapM (localDownloads homeDir)
-  where concatMapM f = fmap concat . mapM f
+pubSourceDir :: Compiler FilePath
+pubSourceDir = dropExtension <$> getResourceFilePath
+
+{-
+-- | runs make for this identifier.
+runMake :: Compiler ()
+runMake = do dir <- pubSourceDir
+             unsafeCompiler $ void $ system $ unwords ["make", "-C", dir , "pdf"]
+
+-}
+runMake :: Identifier -> Rules ()
+runMake ident = preprocess $ void $ system $ unwords ["make", "-C", dir , "pdf"]
+  where dir = combine contentsDir $ dropExtension $ toFilePath ident
+
+{-
+-- | Build the local d
+buildDownloads :: Identifier -> Rules ()
+buildDownloads ident = do
+  runMake ident
+  create [i]
+  localDownloads ident >>= mapM_ rulesDownloadItem
+
+
+-- Rules for a local download
+rulesDownloadItem :: (Identifier, FilePath) -> Rules ()
+rulesDownloadItem (i,fp) = do
+  create [i] $ do
+    route idRoute
+    compile $ copyRemoteFileCompiler fp
+-}
 
 ------------------------ Helper functions ------------------------------
 
-makeDownload :: String -> String -> String
-makeDownload key src =  li $ markdownLink extName url title
-  where ext = takeExtension src
-        extName = tail ext
-        url     = "/research/publication" </> key <.> ext
-        title   = "Download as " ++ extName
+
+       
 
 li :: String -> String
 li = between "<li>" "</li>"
 
-markdownLink :: String -> String -> String -> String
-markdownLink txt url title = bracket txt
-                             ++ paren (unwords [url, show title])
+markdownLink :: String -> String -> String
+markdownLink url ext = bracket ext ++ paren linkDescr
+  where title     = unwords ["Download as", ext]
+        linkDescr = unwords [url <.> ext, show title]
 
 between :: String -> String -> String -> String
 between begin end str = begin ++ str ++ end
